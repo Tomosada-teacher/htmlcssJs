@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>Don't Drop! - ボール維持ゲーム</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.min.js"></script>
+    <style>
+        body { margin: 0; overflow: hidden; background: #222; font-family: sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        canvas { border: 4px solid #444; border-radius: 8px; }
+    </style>
+</head>
+<body>
+    <script>
+        let balls = [];
+        let score = 0;
+        let gameState = "PLAY"; // "PLAY" か "GAMEOVER"
+        let gravity = 0.10;      // 重力の強さ（数字を大きくすると難しくなる）
+
+        function setup() {
+            createCanvas(400, 600); // ゲームらしい縦長の画面
+            resetGame();
+        }
+
+        function resetGame() {
+            balls = [];
+            score = 0;
+            gameState = "PLAY";
+            // ボールを2つ作成
+            addBall(width / 3, 200); //widthは幅
+            addBall((width / 3) * 2, 100);
+            loop(); // 描画を再開
+        }
+
+        function addBall(x, y) {
+            balls.push({
+                x: x,
+                y: y,
+                vx: random(-2, 2),
+                vy: 0,
+                radius: 25,
+                color: [random(100, 255), random(100, 255), random(100, 255)]
+            });
+        }
+
+        function draw() {
+            background(30);
+            if (gameState === "PLAY") {
+                // スコア表示
+                fill(255);
+                textSize(32);
+                textAlign(CENTER);
+                text("SCORE: " + score, width / 2, 50);
+
+                for (let b of balls) {
+                    // 重力を加える
+                    b.vy += gravity;
+                    b.x += b.vx;
+                    b.y += b.vy;
+
+                    // 壁での跳ね返り（左右）
+                    if (b.x < b.radius || b.x > width - b.radius) {
+                        b.vx *= -1;
+                    }
+
+                    // ボールの描画
+                    fill(b.color);
+                    noStroke();
+                    ellipse(b.x, b.y, b.radius * 2);
+
+                    // ゲームオーバー判定（画面下に消えたら）
+                    if (b.y - b.radius > height) {
+                        gameState = "GAMEOVER";
+                    }
+                }
+            } else {
+                // ゲームオーバー画面
+                fill(255, 50, 50);
+                textSize(48);
+                textAlign(CENTER);
+                text("GAME OVER", width / 2, height / 2);
+                fill(255);
+                textSize(20);
+                text("Score: " + score, width / 2, height / 2 + 50);
+                text("Click to Restart", width / 2, height / 2 + 100);
+                noLoop(); // 処理を止める
+            }
+        }
+
+        function mousePressed() {
+            if (gameState === "PLAY") {
+                for (let b of balls) {
+                    // マウスとボールの距離を計算
+                    let d = dist(mouseX, mouseY, b.x, b.y);
+                    // ボールの範囲内をクリックしたか判定
+                    if (d < b.radius + 20) { // 少し判定を甘く（+20）して操作しやすく
+                        b.vy = -10; // 上に弾き飛ばす速度
+                        b.vx = random(-5, 5); // 横方向にも少しランダムに動かす
+                        score = score + 1;
+                        // クリックした時に色を変える演出
+                        b.color = [random(100, 255), random(100, 255), random(100, 255)];
+                    }
+                }
+            } else {
+                resetGame();
+            }
+        }
+    </script>
+</body>
+</html>
